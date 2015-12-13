@@ -184,7 +184,18 @@ class VuforiaImage extends Image {
 		/* start jpeg conversion */	
 		$input_file = Director::absoluteBaseURL().$this->Filename;
 		$timeStamp = time();
-        $output_file = $_SERVER['DOCUMENT_ROOT']."\assets\Uploads\marker_".$timeStamp.".jpeg";
+
+		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+		{
+			$output_file = $_SERVER['DOCUMENT_ROOT']."\assets\Uploads\marker_".$timeStamp.".jpeg";
+		}
+		else
+		{
+			$output_file = $_SERVER['DOCUMENT_ROOT']."/assets/Uploads/marker_".$timeStamp.".jpeg";
+		}
+
+
+        
         $type = exif_imagetype($input_file);
 				
 		/* do the conversion */
