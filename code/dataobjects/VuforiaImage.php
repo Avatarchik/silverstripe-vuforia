@@ -25,7 +25,7 @@ class VuforiaImage extends Image {
 	/**
 	 * Defined by the API
 	 */
-	public $maxFileSize = 2359296;
+	public $maxFileSize = 2359296; 
 	
 	public function getVuforiaInfo() {
 		$data = $this->VuforiaData ? ArrayData::create(json_decode($this->VuforiaData, true)) : null;
