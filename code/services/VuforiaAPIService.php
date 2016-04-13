@@ -59,7 +59,8 @@ class VuforiaAPIService {
 	}
 	
 	public function uploadNewTarget(VuforiaImage $image) {
-		if (!$image->verifyAcceptable()) {
+		
+		if (!$image->verifyAcceptable()) {	
 			return;
 		}
 
@@ -68,6 +69,7 @@ class VuforiaAPIService {
 
 		// array( 'width'=>320.0 , 'name'=>$this->targetName , 'image'=>$this->getImageAsBase64() , 
 		// 'application_metadata'=>base64_encode("Vuforia test metadata") , 'active_flag'=>1 ) );
+		
 		$request = $this->createClient(HTTP_Request2::METHOD_POST);
 		$request->setBody($toSend);
 		$request->setHeader("Content-Type", "application/json" );
@@ -76,11 +78,13 @@ class VuforiaAPIService {
 
 		try {
 			$response = $request->send();
+			
+			if ($response->getStatus() == 200  || $response->getStatus() == 201 ) {
 
-			if (200 == $response->getStatus() || 201 == $response->getStatus() ) {
 				$image->VuforiaData = $response->getBody();
 				$image->Messages = 'Image processing';
 				$image->ProcessStatus = VuforiaImage::PROCESS_STATUS;
+				
 			} else {
 				$image->ProcessStatus = VuforiaImage::ERROR_STATUS;
 				
@@ -91,6 +95,7 @@ class VuforiaAPIService {
 						$image->Messages = "A file with the name ${data['name']} exists, please remove it from Vuforia first";
 					}
 				} else {
+
 					$image->Messages = 'Failed uploading to Vuforia: ' . $response->getStatus() . ' ' .
 						$response->getReasonPhrase(). ' ' . $response->getBody();
 				}
@@ -99,6 +104,7 @@ class VuforiaAPIService {
 			}
 
 		} catch (HTTP_Request2_Exception $e) {
+			
 			$image->ProcessStatus = VuforiaImage::ERROR_STATUS;
 			$image->Messages = 'Failed uploading to Vuforia: ' . $response->getStatus() . ' ' .
 						$response->getReasonPhrase(). ' ' . $response->getBody();
@@ -108,6 +114,7 @@ class VuforiaAPIService {
 	}
 
 	public function updateTarget(VuforiaImage $image) {
+		
 		$data = $image->getVuforiaInfo();
 		if (!$data) {
 			return;
@@ -123,11 +130,13 @@ class VuforiaAPIService {
 			$request = $this->createClient(HTTP_Request2::METHOD_PUT, $targetId);
 			
 			$data = $image->dataForVuforia();
+
 			$request->setBody(json_encode($data));
 			$request->setHeader("Content-Type", "application/json" );
 			$this->updateHeaders($request);
 			
 			$response = $request->send();
+
 			
 			if (200 == $response->getStatus() || 201 == $response->getStatus() ) {
 				$info = json_decode($response->getBody(), true);
@@ -145,6 +154,7 @@ class VuforiaAPIService {
 			}
 			
 		} catch (Exception $ex) {
+
 			$image->ProcessStatus = VuforiaImage::ERROR_STATUS;
 			$image->Messages = 'Failed uploading to Vuforia: ' . $response->getStatus() . ' ' .
 						$response->getReasonPhrase(). ' ' . $response->getBody();
@@ -185,6 +195,7 @@ class VuforiaAPIService {
 				$image->Messages = 'Failed uploading to Vuforia';
 			}
 		} catch (Exception $e) {
+
 			$image->ProcessStatus = VuforiaImage::ERROR_STATUS;
 			$image->Messages = 'Failed uploading to Vuforia: ' . $e->getMessage();
 		}

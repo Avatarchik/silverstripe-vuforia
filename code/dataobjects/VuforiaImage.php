@@ -25,7 +25,7 @@ class VuforiaImage extends Image {
 	/**
 	 * Defined by the API
 	 */
-	public $maxFileSize = 2359296; 
+	public $maxFileSize = 2359296;
 	
 	public function getVuforiaInfo() {
 		$data = $this->VuforiaData ? ArrayData::create(json_decode($this->VuforiaData, true)) : null;
@@ -89,6 +89,11 @@ class VuforiaImage extends Image {
 			$messages[] = "Image size must be less than 2.25MB. ";
 		}
 		
+		if($this->getExtension() != 'jpg'){
+			$okay = false;
+			$messages[] = "Image must be JPEG format.";
+		}
+		
 		if (!$this->TargetWidth) {
 			$okay = false;
 			$messages[] = "Image must have a 'Target Width' specified. ";
@@ -138,7 +143,7 @@ class VuforiaImage extends Image {
 	
 	private $updating = false;
 	public function onBeforeWrite() {
-		
+
 		parent::onBeforeWrite();
 		
 		if($this->getExtension() == 'png' || $this->getExtension() == 'gif'){
@@ -148,7 +153,7 @@ class VuforiaImage extends Image {
 		if (!$this->TargetWidth) {
 			$this->TargetWidth = 200;
 		}
-		
+
 		$existing = $this->getVuforiaInfo();
 		
 		if (!$this->updating) {
@@ -175,29 +180,35 @@ class VuforiaImage extends Image {
 		$existing = $this->getVuforiaInfo();
 		if ($existing) {
 			// update the remote
-			$this->vuforiaAPIService->updateTarget($this);
+			//$this->vuforiaAPIService->updateTarget($this);
 		} 
 	}
 	
 	public function convertToJPEG() {
 		
+		
 		/* start jpeg conversion */	
 		$input_file = Director::absoluteBaseURL().$this->Filename;
 		$timeStamp = time();
+		
+		$full = $this->getFullPath();
+		$short = $this->getRelativePath();
+		$path = str_replace($this->Name, "", $full);
+		$shortPath = str_replace($this->Name, "", $short);
+
 
 		if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
 		{
-			$output_file = $_SERVER['DOCUMENT_ROOT']."\assets\Uploads\marker_".$timeStamp.".jpeg";
+			//$output_file = $_SERVER['DOCUMENT_ROOT']."\assets\Uploads\marker_".$timeStamp.".jpeg";
 		}
 		else
 		{
-			$output_file = $_SERVER['DOCUMENT_ROOT']."/assets/Uploads/marker_".$timeStamp.".jpeg";
+			//$output_file = $_SERVER['DOCUMENT_ROOT']."/assets/Uploads/marker_".$timeStamp.".jpeg";
 		}
+		
+		$output_file = $path."marker".$timeStamp.".jpg";
+		
 
-
-        
-        $type = exif_imagetype($input_file);
-				
 		/* do the conversion */
 		$input = imagecreatefrompng($input_file);
 		list($width, $height) = getimagesize($input_file);
@@ -206,13 +217,22 @@ class VuforiaImage extends Image {
 		imagefilledrectangle($output, 0, 0, $width, $height, $white);
 		imagecopy($output, $input, 0, 0, 0, 0, $width, $height);
 		imagejpeg($output, $output_file, 100);
-					
-		/* get file size of new jpeg */
-		$fileSize = filesize($output_file);
 		
 		/* update */
-		$this->Filename = "assets/Uploads/marker_".$timeStamp.".jpeg";
+		$this->Filename = $shortPath."marker".$timeStamp.".jpg";
+		$this->Name = "marker".$timeStamp.".jpg";
         
 	}
+	
+	public function onAfterSerialize( &$formattedDataObjectMap ){
+		
+		$result = $this->vuforiaAPIService->checkImageStatus($this);
+
+		if($data = $result->VuforiaData){
+			$formatedData = json_decode($data);
+  			$formattedDataObjectMap["VuforiaData"] = $formatedData;	
+		}
+		
+  	}
 	
 }
