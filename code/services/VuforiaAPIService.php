@@ -9,7 +9,7 @@
 class VuforiaAPIService {
 	public $url						= "https://vws.vuforia.com";
 	public $requestPath				= "/targets";
-
+	private $request;
 	/**
 	 * Default access key
 	 *
@@ -58,6 +58,45 @@ class VuforiaAPIService {
 		return $image;
 	}
 	
+	function GetAllTargets(){
+		$this->requestPath = $this->requestPath;
+		
+		$this->execGetAllTargets();
+	}
+	
+	private function execGetAllTargets(){
+		
+		$this->request = new HTTP_Request2();
+		$this->request->setMethod( HTTP_Request2::METHOD_GET );
+		
+		$this->request->setConfig(array(
+				'ssl_verify_peer' => false
+		));
+		
+		$this->request->setURL( $this->url . $this->requestPath );
+		
+		// Define the Date and Authentication headers
+		$this->updateHeaders();
+		
+		
+		try {
+		
+			$response = $this->request->send();
+		
+			if (200 == $response->getStatus()) {
+				echo $response->getBody();
+				error_log($response->getBody());
+			} else {
+				echo 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+						$response->getReasonPhrase(). ' ' . $response->getBody();
+			}
+		} catch (HTTP_Request2_Exception $e) {
+			echo 'Error: ' . $e->getMessage();
+		}
+		
+		
+	}
+
 	public function uploadNewTarget(VuforiaImage $image) {
 		
 		if (!$image->verifyAcceptable()) {	
@@ -219,11 +258,14 @@ class VuforiaAPIService {
 	public function deleteTarget(VuforiaImage $image) {
 		// if we've got no data, it doesn't exist remotely
 		$data = $image->getVuforiaInfo();
-		
+		error_log("deleteTarget $data = $image->getVuforiaInfo(); = ");
+		error_log(print_r($data));
+
+		/*
 		if (!$data || !$data->target_record || !$data->target_record->target_id) {
 			return;
 		}
-		
+		*/
 		$request = $this->createClient(HTTP_Request2::METHOD_DELETE, $data->target_record->target_id);
 		
 		$this->updateHeaders($request);
@@ -232,14 +274,40 @@ class VuforiaAPIService {
 		
 			$response = $request->send();
 			if (200 == $response->getStatus()) {
+				error_log( $response->getBody());
 				return true;
 			} else {
 				
 			}
 		} catch (HTTP_Request2_Exception $e) {
-			
+			error_log( 'Error: ' . $e->getMessage());
 		}
 		return false;
+
+
+		$this->request = new HTTP_Request2();
+		$this->request->setMethod( HTTP_Request2::METHOD_DELETE );
+		
+		$this->request->setConfig(array(
+				'ssl_verify_peer' => false
+		));
+		$this->request->setURL( $this->url . $this->requestPath );
+		// Define the Date and Authentication headers
+		$this->setHeaders();
+		try {
+			$response = $this->request->send();
+			if (200 == $response->getStatus()) {
+				error_log( $response->getBody());
+				return true;
+			} else {
+				error_log( 'Unexpected HTTP status: ' . $response->getStatus() . ' ' .
+						$response->getReasonPhrase(). ' ' . $response->getBody());
+
+			}
+		} catch (HTTP_Request2_Exception $e) {
+			echo 'Error: ' . $e->getMessage();
+		}
+
 	}
 	
 	/**

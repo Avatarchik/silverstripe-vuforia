@@ -89,7 +89,7 @@ class VuforiaImage extends Image {
 			$messages[] = "Image size must be less than 2.25MB. ";
 		}
 		
-		if($this->getExtension() != 'jpg'){
+		if(strtolower($this->getExtension()) != 'jpg'){
 			$okay = false;
 			$messages[] = "Image must be JPEG format.";
 		}
@@ -146,7 +146,7 @@ class VuforiaImage extends Image {
 
 		parent::onBeforeWrite();
 		
-		if($this->getExtension() == 'png' || $this->getExtension() == 'gif'){
+		if(strtolower($this->getExtension()) == 'png' || strtolower($this->getExtension()) == 'gif'){
 			$this->convertToJPEG();
 		}
 		
@@ -177,6 +177,8 @@ class VuforiaImage extends Image {
 		if (!$this->TargetWidth) {
 			return;
 		}
+
+		// do similarity check, delete if similar
 		$existing = $this->getVuforiaInfo();
 		if ($existing) {
 			// update the remote
